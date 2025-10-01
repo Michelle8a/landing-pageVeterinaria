@@ -1,0 +1,63 @@
+[
+  {
+    "id": "b7d31f-62d4-4c35-8160-b221bf",
+    "nombre": "Nicol",
+    "raza": "french",
+    "fecha_nac": "2025-09-26",
+    "responsable": "carolina",
+    "celular": "70688006",
+    "direccion": "ajjaja",
+    "cartilla": []
+  },
+  {
+    "id": "501ac1-ad77-4806-adfe-91b98a",
+    "nombre": "aaaa",
+    "raza": "a",
+    "fecha_nac": "2025-09-05",
+    "responsable": "a",
+    "celular": "56432",
+    "direccion": "",
+    "cartilla": [
+      {
+        "id": "671a55-4d22-41a7-9164-900d23",
+        "nombre": "reww",
+        "fecha_aplicacion": "2025-09-19",
+        "proxima": "2025-10-01"
+      }
+    ]
+  },
+  {
+    "id": "ff65ba-699f-4ed2-8b71-9b09f6",
+    "nombre": "prueba",
+    "raza": "prueba",
+    "fecha_nac": "2025-09-27",
+    "responsable": "wsdx",
+    "celular": "706",
+    "direccion": "2ewd",
+    "cartilla": [
+      {
+        "id": "b082be-3fea-45d1-aee5-2aa207",
+        "nombre": "fc",
+        "fecha_aplicacion": "2025-09-27",
+        "proxima": "2025-09-20"
+      }
+    ]
+  },
+  {
+    "id": "9eafba-7d15-4d90-b2fe-a34fe9",
+    "nombre": "wesx",
+    "raza": "wdsx",
+    "fecha_nac": "2025-09-18",
+    "responsable": "wsx",
+    "celular": "345ewds",
+    "direccion": "ds",
+    "cartilla": [
+      {
+        "id": "6aacfe-e5fb-4a84-8e03-61298a",
+        "nombre": "qrefd",
+        "fecha_aplicacion": "2025-09-19",
+        "proxima": "2025-09-12"
+      }
+    ]
+  }
+]

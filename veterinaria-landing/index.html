@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Veterinaria - Gestión</title>
+
+  <!-- Bootstrap 5 (CDN) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <!-- NAV -->
+  <nav class="navbar navbar-expand-lg navbar-dark custom-navbar">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">🐾 Veterinaria</a>
+
+      <div class="d-flex gap-2" id="navActions">
+        <button class="btn btn-outline-light" id="btnShowCitas">Citas</button>
+        <button class="btn btn-outline-light" id="btnShowPacientes">Pacientes</button>
+        <button class="btn btn-outline-light" id="btnShowInventario">Inventario</button>
+        <button class="btn btn-light" id="btnInitStorage">Elegir carpeta de datos</button>
+        
+        <!-- Área dinámica de sesión -->
+        <div id="userArea">
+          <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#loginModal">Iniciar/Registrar</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="text-center p-5 hero">
+    <h1 class="text-white">Gestión de Citas y Pacientes</h1>
+    <p class="text-white">Panel de administración local</p>
+    <div class="d-flex justify-content-center gap-2">
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#citaModal">Agendar Cita</button>
+      <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#pacienteModal">Registrar Paciente</button>
+    </div>
+  </header>
+
+  <main class="container my-4">
+
+    <!-- SECCIÓN CITAS -->
+    <section id="seccionCitas">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>📅 Citas</h2>
+        <div>
+          <label class="form-label me-2 text-muted">Fecha:</label>
+          <input type="date" id="filtroFecha" class="form-control d-inline-block" style="width:180px;">
+        </div>
+      </div>
+
+      <!-- Barras: ocupación vs límite y progreso del día -->
+      <div class="mb-3">
+        <div class="mb-2 small">Capacidad diaria (15 citas máx)</div>
+        <div class="progress mb-2">
+          <div id="capacidadBar" class="progress-bar" role="progressbar">0/15</div>
+        </div>
+
+        <div class="mb-2 small">Citas pasadas hoy</div>
+        <div class="progress">
+          <div id="pasadasBar" class="progress-bar bg-success" role="progressbar">0</div>
+        </div>
+      </div>
+
+      <table class="table table-hover" id="tablaCitas">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Inicio</th>
+            <th>Fin</th>
+            <th>Mascota</th>
+            <th>Responsable</th>
+            <th>Doctor</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <!-- SECCIÓN PACIENTES -->
+    <section id="seccionPacientes" style="display:none;">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>👩‍⚕️ Pacientes</h2>
+     
+      </div>
+
+      <table class="table table-striped" id="tablaPacientes">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Raza</th>
+            <th>Fecha Nac.</th>
+            <th>Responsable</th>
+            <th>Celular</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <!-- SECCIÓN INVENTARIO -->
+    <section id="seccionInventario" style="display:none;">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>📦 Inventario</h2>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#inventarioModal">
+          Agregar Producto
+        </button>
+      </div>
+
+      <!-- Resumen de inventario -->
+      <div class="row mb-3">
+        <div class="col-md-3">
+          <div class="card text-center">
+            <div class="card-body">
+              <h5 class="card-title">Total Productos</h5>
+              <h3 id="totalProductos">0</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card text-center">
+            <div class="card-body">
+              <h5 class="card-title">Medicamentos</h5>
+              <h3 id="totalMedicamentos">0</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card text-center">
+            <div class="card-body">
+              <h5 class="card-title">Alimentos</h5>
+              <h3 id="totalAlimentos">0</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card text-center">
+            <div class="card-body">
+              <h5 class="card-title">Stock Bajo</h5>
+              <h3 id="totalStockBajo" class="text-danger">0</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filtros -->
+      <div class="mb-3 d-flex gap-2">
+        <select id="filtroCategoriaInventario" class="form-select" style="width:200px;">
+          <option value="">Todas las categorías</option>
+          <option value="Medicamento">Medicamentos</option>
+          <option value="Alimento">Alimentos</option>
+          <option value="Accesorio">Accesorios</option>
+          <option value="Otro">Otros</option>
+        </select>
+        <input type="text" id="buscarProducto" class="form-control" placeholder="Buscar producto..." style="width:300px;">
+      </div>
+
+      <table class="table table-hover" id="tablaInventario">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Categoría</th>
+            <th>Stock</th>
+            <th>Precio Unit.</th>
+            <th>Total</th>
+            <th>Fecha Registro</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+  </main>
+
+  <!-- MODAL: LOGIN / REGISTRO -->
+  <div class="modal fade" id="loginModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content p-3">
+        <h5>Cuenta</h5>
+        <ul class="nav nav-tabs" id="authTabs" role="tablist">
+          <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabLogin">Iniciar Sesión</button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabRegister">Registrar</button>
+          </li>
+        </ul>
+
+        <div class="tab-content mt-3">
+          <div id="tabLogin" class="tab-pane active">
+            <input id="loginUser" class="form-control mb-2" placeholder="Usuario">
+            <input id="loginPass" type="password" class="form-control mb-2" placeholder="Contraseña">
+            <div class="d-flex gap-2">
+              <button class="btn btn-primary" id="btnLogin">Entrar</button>
+              <button class="btn btn-outline-secondary" id="btnLoginUseLocal">Usar demo local</button>
+            </div>
+            <div id="loginMsg" class="mt-2"></div>
+          </div>
+
+          <div id="tabRegister" class="tab-pane">
+            <input id="regUser" class="form-control mb-2" placeholder="Usuario">
+            <input id="regPass" type="password" class="form-control mb-2" placeholder="Contraseña">
+            <button class="btn btn-success" id="btnRegister">Registrar</button>
+            <div id="regMsg" class="mt-2"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: PACIENTE (nuevo / editar) -->
+  <div class="modal fade" id="pacienteModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content p-3">
+        <h5 id="pacienteModalTitle">Registrar Paciente</h5>
+        <form id="formPaciente">
+          <input type="hidden" id="pacienteId">
+          <div class="row g-2">
+            <div class="col-md-6"><input id="p_nombre" class="form-control" placeholder="Nombre de la mascota" required></div>
+            <div class="col-md-6"><input id="p_raza" class="form-control" placeholder="Raza" required></div>
+            <div class="col-md-4"><input id="p_fecha_nac" type="date" class="form-control" placeholder="Fecha de nacimiento"></div>
+            <div class="col-md-4"><input id="p_responsable" class="form-control" placeholder="Responsable" required></div>
+            <div class="col-md-4"><input id="p_celular" class="form-control" placeholder="Celular"></div>
+            <div class="col-12"><input id="p_direccion" class="form-control" placeholder="Dirección"></div>
+
+            <div class="col-12 mt-2">
+              <label class="form-label">Cartilla de Vacunas</label>
+              <div id="cartillaList" class="mb-2"></div>
+              <div class="d-flex gap-2">
+                <input id="vacuna_nombre" class="form-control" placeholder="Nombre vacuna">
+                <input id="vacuna_fecha" type="date" class="form-control">
+                <input id="vacuna_prox" type="date" class="form-control" placeholder="Próxima">
+                <button id="btnAddVacuna" class="btn btn-outline-primary">Agregar vacuna</button>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="mt-3 d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            <button class="btn btn-primary" type="submit">Guardar Paciente</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CITA (nuevo / editar) -->
+  <div class="modal fade" id="citaModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content p-3">
+        <h5 id="citaModalTitle">Agendar Cita</h5>
+        <form id="formCita">
+          <input type="hidden" id="citaId">
+
+          <div class="mb-2">
+            <label class="form-label small">Paciente existente</label>
+            <select id="selectPacienteExistente" class="form-select mb-2">
+              <option value="">-- Seleccionar paciente (si aplica) --</option>
+            </select>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="toggleNuevoPaciente" checked>
+              <label class="form-check-label">Crear/editar datos del paciente en este formulario</label>
+            </div>
+          </div>
+
+          <div id="nuevoPacienteFields">
+            <div class="row g-2">
+              <div class="col-md-6"><input id="c_paciente" class="form-control" placeholder="Nombre mascota" required></div>
+              <div class="col-md-6"><input id="c_responsable" class="form-control" placeholder="Responsable" required></div>
+              <div class="col-md-6"><input id="c_raza" class="form-control" placeholder="Raza"></div>
+              <div class="col-md-6"><input id="c_celular" class="form-control" placeholder="Celular"></div>
+            </div>
+          </div>
+
+          <div class="row g-2 mt-2">
+            <div class="col-md-4"><input id="c_fecha" type="date" class="form-control" required></div>
+            <div class="col-md-4"><input id="c_hora_inicio" type="time" class="form-control" required></div>
+            <div class="col-md-4"><input id="c_hora_fin" type="time" class="form-control" required></div>
+
+            <div class="col-md-6"><input id="c_doctor" class="form-control" placeholder="Doctor asignado" required></div>
+            <div class="col-md-6"><input id="c_generalidades" class="form-control" placeholder="Generalidades"></div>
+          </div>
+
+          <div class="mt-3 d-flex justify-content-end gap-2">
+            <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cerrar</button>
+            <button class="btn btn-primary" type="submit">Guardar Cita</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: DETALLE CITA -->
+  <div class="modal fade" id="detalleModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content p-3">
+        <h5>Detalle de Cita</h5>
+        <div id="detalleContenido"></div>
+        <div class="mt-3 d-flex justify-content-between">
+          <div id="tiempoCitaInfo" class="text-muted"></div>
+          <div>
+            <button id="btnStartCita" class="btn btn-outline-success">Marcar En Progreso</button>
+            <button id="btnCompleteCita" class="btn btn-outline-primary">Marcar Completada</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: INVENTARIO (nuevo / editar producto) -->
+  <div class="modal fade" id="inventarioModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content p-3">
+        <h5 id="inventarioModalTitle">Agregar Producto</h5>
+        <form id="formInventario">
+          <input type="hidden" id="productoId">
+          
+          <div class="mb-2">
+            <label class="form-label">Nombre del Producto</label>
+            <input id="prod_nombre" class="form-control" placeholder="Ej: Antipulgas" required>
+          </div>
+
+          <div class="mb-2">
+            <label class="form-label">Categoría</label>
+            <select id="prod_categoria" class="form-select" required>
+              <option value="">Seleccionar...</option>
+              <option value="Medicamento">Medicamento</option>
+              <option value="Alimento">Alimento</option>
+              <option value="Accesorio">Accesorio</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+
+          <div class="row g-2">
+            <div class="col-md-6">
+              <label class="form-label">Cantidad en Stock</label>
+              <input id="prod_cantidad" type="number" class="form-control" min="0" placeholder="0" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Precio Unitario ($)</label>
+              <input id="prod_precio" type="number" step="0.01" class="form-control" min="0" placeholder="0.00" required>
+            </div>
+          </div>
+
+          <div class="mb-2 mt-2">
+            <label class="form-label">Descripción (opcional)</label>
+            <textarea id="prod_descripcion" class="form-control" rows="2" placeholder="Detalles adicionales..."></textarea>
+          </div>
+
+          <div class="mt-3 d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            <button class="btn btn-primary" type="submit">Guardar Producto</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap + Script app -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

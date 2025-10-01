@@ -1,0 +1,43 @@
+/* Paleta: #004F4D #1F2024 #4B4952 #79717A #A68F97 */
+:root{
+  --verde-oscuro: #004F4D;
+  --negro-hero: #1F2024;
+  --gris-oscuro: #4B4952;
+  --gris-medio: #79717A;
+  --rosa-palo: #A68F97;
+}
+
+body {
+  background: #f7f7f8;
+  color: #222;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+.custom-navbar {
+  background-color: var(--verde-oscuro);
+}
+
+.hero {
+  background: linear-gradient(120deg, var(--negro-hero), rgba(0,0,0,0.45));
+  color: white;
+  border-bottom: 3px solid rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+  border-radius: 0 0 10px 10px;
+}
+
+.btn-primary {
+  background-color: var(--gris-oscuro);
+  border: none;
+}
+
+.btn-primary:hover {
+  background-color: var(--gris-medio);
+}
+
+.table thead {
+  background: linear-gradient(90deg, rgba(0,79,77,0.05), rgba(166,143,151,0.03));
+}
+
+.progress-bar {
+  min-width: 40px;
+}
