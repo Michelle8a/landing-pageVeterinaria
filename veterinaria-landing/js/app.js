@@ -396,6 +396,7 @@ function renderInventarioTable(){
       <td>
         <button class="btn btn-sm btn-warning" onclick="editarProducto('${p.id}')">Editar</button>
         <button class="btn btn-sm btn-danger" onclick="confirmEliminarProducto('${p.id}')">Eliminar</button>
+        <button class="btn btn-sm btn-success" onclick="addToCart('${p.id}')">🛒</button>
       </td>
     `;
     tbody.appendChild(tr);
@@ -1132,3 +1133,141 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderCartillaList([]);
   });
 });
+
+
+/* ======================
+   CARRITO DE COMPRAS
+   ====================== */
+let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+
+function saveCart() {
+  localStorage.setItem('cart', JSON.stringify(cart));
+  renderCart();
+}
+
+function addToCart(productId, cantidad = 1) {
+  const producto = findProductoById(productId);
+  if(!producto) return alert('Producto no encontrado');
+
+  // cantidad disponible considerando carrito
+  const inCart = cart.find(p => p.idProducto === productId)?.cantidad || 0;
+  if(producto.cantidad - inCart < cantidad) return alert('No hay suficiente stock');
+
+  const idx = cart.findIndex(p => p.idProducto === productId);
+  if(idx >= 0){
+    cart[idx].cantidad += cantidad;
+  } else {
+    cart.push({
+      idProducto: productId,
+      nombre: producto.nombre,
+      precio: producto.precio,
+      cantidad
+    });
+  }
+
+  saveCart();
+  renderInventarioTable(); // actualizar stock visible en la tabla
+  alert(`Se agregó ${cantidad} x ${producto.nombre} al carrito`);
+}
+
+
+function removeFromCart(productId){
+  cart = cart.filter(p => p.idProducto !== productId);
+  saveCart();
+}
+
+function updateCartQuantity(productId, cantidad){
+  const idx = cart.findIndex(p => p.idProducto === productId);
+  if(idx >= 0){
+    if(cantidad <= 0){
+      removeFromCart(productId);
+    } else {
+      const producto = findProductoById(productId);
+      if(producto.cantidad < cantidad) return alert('No hay suficiente stock');
+      cart[idx].cantidad = cantidad;
+    }
+    saveCart();
+  }
+}
+
+function getCartTotal(){
+  return cart.reduce((sum, p) => sum + p.precio * p.cantidad, 0).toFixed(2);
+}
+
+function renderCart(){
+  const tbody = document.querySelector('#cartTable tbody');
+  tbody.innerHTML = '';
+  cart.forEach(p => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${p.nombre}</td>
+      <td>$${p.precio.toFixed(2)}</td>
+      <td>
+        <input type="number" min="1" class="form-control form-control-sm" style="width:70px" value="${p.cantidad}" data-id="${p.idProducto}">
+      </td>
+      <td>$${(p.precio * p.cantidad).toFixed(2)}</td>
+      <td><button class="btn btn-sm btn-danger" data-id="${p.idProducto}">×</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('cartTotal').textContent = getCartTotal();
+
+  // eventos input cantidad
+  tbody.querySelectorAll('input[type="number"]').forEach(input => {
+    input.addEventListener('change', (ev)=>{
+      const id = ev.target.getAttribute('data-id');
+      let cant = parseInt(ev.target.value);
+      if(isNaN(cant) || cant < 1) cant = 1;
+      updateCartQuantity(id, cant);
+    });
+  });
+
+  // eventos eliminar
+  tbody.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', ()=>{
+      const id = btn.getAttribute('data-id');
+      removeFromCart(id);
+    });
+  });
+}
+
+// botón para abrir carrito
+const cartBtn = document.createElement('button');
+cartBtn.className = 'btn btn-primary position-fixed';
+cartBtn.style.bottom = '20px';
+cartBtn.style.right = '20px';
+cartBtn.style.zIndex = '1055';
+cartBtn.textContent = '🛒 Carrito';
+cartBtn.setAttribute('data-bs-toggle','modal');
+cartBtn.setAttribute('data-bs-target','#cartModal');
+document.body.appendChild(cartBtn);
+
+// checkout
+document.getElementById('checkoutBtn').addEventListener('click', async ()=>{
+  if(cart.length === 0) return alert('Carrito vacío');
+  
+  for(const item of cart){
+    const producto = findProductoById(item.idProducto);
+    if(!producto || producto.cantidad < item.cantidad){
+      return alert(`Stock insuficiente de ${item.nombre}`);
+    }
+  }
+
+  // restar del inventario
+  cart.forEach(item=>{
+    const producto = findProductoById(item.idProducto);
+    producto.cantidad -= item.cantidad;
+  });
+
+  await saveJSONFile(FILE_INVENTARIO, inventario);
+  cart = [];
+  saveCart();
+  renderInventarioTable();
+  alert('Compra realizada correctamente');
+  const cartModal = bootstrap.Modal.getInstance(document.getElementById('cartModal'));
+  if(cartModal) cartModal.hide();
+});
+
+// inicializar render del carrito
+renderCart();
