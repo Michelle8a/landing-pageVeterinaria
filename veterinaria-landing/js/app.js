@@ -1140,27 +1140,24 @@ document.addEventListener('DOMContentLoaded', async () => {
    ====================== */
 let carrito = JSON.parse(localStorage.getItem('carrito') || '[]');
 
-// guarda el carrito en el localStorage y actualiza la tabla
 function guardarCarrito() {
   localStorage.setItem('carrito', JSON.stringify(carrito));
-  renderizarCarrito();
+  mostrarCarrito();
 }
 
-// agregar producto al carrito
 function agregarAlCarrito(idProducto, cantidad = 1) {
-  const producto = buscarProductoPorId(idProducto);
+  const producto = findProductoById(idProducto);
   if(!producto) return alert('Producto no encontrado');
+  if(producto.cantidad < cantidad) return alert('No hay suficiente stock');
 
-  // revisar si ya está en el carrito para no sobrepasar el stock
-  const enCarrito = carrito.find(p => p.idProducto === idProducto)?.cantidad || 0;
-  if(producto.cantidad - enCarrito < cantidad) return alert('No hay suficiente stock');
-
-  const indice = carrito.findIndex(p => p.idProducto === idProducto);
-  if(indice >= 0){
-    carrito[indice].cantidad += cantidad; // sumamos la cantidad
+  const idx = carrito.findIndex(p => p.idProducto === idProducto);
+  if(idx >= 0){
+    if(producto.cantidad < carrito[idx].cantidad + cantidad) 
+      return alert('No hay suficiente stock');
+    carrito[idx].cantidad += cantidad;
   } else {
     carrito.push({
-      idProducto: idProducto,
+      idProducto,
       nombre: producto.nombre,
       precio: producto.precio,
       cantidad
@@ -1168,39 +1165,34 @@ function agregarAlCarrito(idProducto, cantidad = 1) {
   }
 
   guardarCarrito();
-  renderizarInventarioTabla(); // actualizar stock visible
   alert(`Se agregó ${cantidad} x ${producto.nombre} al carrito`);
 }
 
-// quitar producto del carrito
-function quitarDelCarrito(idProducto){
+function eliminarDelCarrito(idProducto){
   carrito = carrito.filter(p => p.idProducto !== idProducto);
   guardarCarrito();
 }
 
-// actualizar cantidad de producto en el carrito
 function actualizarCantidadCarrito(idProducto, cantidad){
-  const indice = carrito.findIndex(p => p.idProducto === idProducto);
-  if(indice >= 0){
+  const idx = carrito.findIndex(p => p.idProducto === idProducto);
+  if(idx >= 0){
     if(cantidad <= 0){
-      quitarDelCarrito(idProducto);
+      eliminarDelCarrito(idProducto);
     } else {
-      const producto = buscarProductoPorId(idProducto);
+      const producto = findProductoById(idProducto);
       if(producto.cantidad < cantidad) return alert('No hay suficiente stock');
-      carrito[indice].cantidad = cantidad;
+      carrito[idx].cantidad = cantidad;
     }
     guardarCarrito();
   }
 }
 
-// total del carrito
 function totalCarrito(){
   return carrito.reduce((sum, p) => sum + p.precio * p.cantidad, 0).toFixed(2);
 }
 
-// renderizar carrito en la tabla del modal
-function renderizarCarrito(){
-  const tbody = document.querySelector('#cartTable tbody');
+function mostrarCarrito(){
+  const tbody = document.querySelector('#tablaCarrito tbody');
   tbody.innerHTML = '';
   carrito.forEach(p => {
     const tr = document.createElement('tr');
@@ -1216,9 +1208,9 @@ function renderizarCarrito(){
     tbody.appendChild(tr);
   });
 
-  document.getElementById('cartTotal').textContent = totalCarrito();
+  document.getElementById('totalCarrito').textContent = totalCarrito();
 
-  // eventos para cambiar cantidad
+  // eventos input cantidad
   tbody.querySelectorAll('input[type="number"]').forEach(input => {
     input.addEventListener('change', (ev)=>{
       const id = ev.target.getAttribute('data-id');
@@ -1228,32 +1220,32 @@ function renderizarCarrito(){
     });
   });
 
-  // eventos para eliminar producto
+  // eventos eliminar
   tbody.querySelectorAll('button').forEach(btn => {
     btn.addEventListener('click', ()=>{
       const id = btn.getAttribute('data-id');
-      quitarDelCarrito(id);
+      eliminarDelCarrito(id);
     });
   });
 }
 
 // botón flotante para abrir carrito
-const botonCarrito = document.createElement('button');
-botonCarrito.className = 'btn btn-primary position-fixed';
-botonCarrito.style.bottom = '20px';
-botonCarrito.style.right = '20px';
-botonCarrito.style.zIndex = '1055';
-botonCarrito.textContent = 'Carrito';
-botonCarrito.setAttribute('data-bs-toggle','modal');
-botonCarrito.setAttribute('data-bs-target','#cartModal');
-document.body.appendChild(botonCarrito);
+const btnCarrito = document.createElement('button');
+btnCarrito.className = 'btn btn-primary position-fixed';
+btnCarrito.style.bottom = '20px';
+btnCarrito.style.right = '20px';
+btnCarrito.style.zIndex = '1055';
+btnCarrito.textContent = '🛒 Carrito';
+btnCarrito.setAttribute('data-bs-toggle','modal');
+btnCarrito.setAttribute('data-bs-target','#modalCarrito');
+document.body.appendChild(btnCarrito);
 
-// checkout / finalizar compra
-document.getElementById('checkoutBtn').addEventListener('click', async ()=>{
+// checkout
+document.getElementById('btnPagar').addEventListener('click', async ()=>{
   if(carrito.length === 0) return alert('Carrito vacío');
   
   for(const item of carrito){
-    const producto = buscarProductoPorId(item.idProducto);
+    const producto = findProductoById(item.idProducto);
     if(!producto || producto.cantidad < item.cantidad){
       return alert(`Stock insuficiente de ${item.nombre}`);
     }
@@ -1261,17 +1253,18 @@ document.getElementById('checkoutBtn').addEventListener('click', async ()=>{
 
   // restar del inventario
   carrito.forEach(item=>{
-    const producto = buscarProductoPorId(item.idProducto);
+    const producto = findProductoById(item.idProducto);
     producto.cantidad -= item.cantidad;
   });
 
   await saveJSONFile(FILE_INVENTARIO, inventario);
   carrito = [];
   guardarCarrito();
-  renderizarInventarioTabla();
+  renderInventarioTable();
   alert('Compra realizada correctamente');
-  const modalCarrito = bootstrap.Modal.getInstance(document.getElementById('cartModal'));
-  if(modalCarrito) modalCarrito.hide();
+  const modal = bootstrap.Modal.getInstance(document.getElementById('modalCarrito'));
+  if(modal) modal.hide();
 });
 
-// inicializar render
+// inicializar render del carrito
+mostrarCarrito();
