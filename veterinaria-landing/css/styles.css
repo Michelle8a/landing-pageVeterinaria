@@ -41,3 +41,15 @@ body {
 .progress-bar {
   min-width: 40px;
 }
+.btn-navbar{
+   background-color: var( --verde-oscuro);
+   color: white;
+  border: none;
+}
+
+.carousel-img {
+  height: 400px;        
+  object-fit: cover;    
+  object-position: center; 
+}
+   
