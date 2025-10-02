@@ -46,7 +46,7 @@ class Auth {
     const userArea = document.getElementById("userArea");
     if (this.isLoggedIn()) {
       userArea.innerHTML = `
-        <span class="text-white me-2">👤 ${this.currentUser}</span>
+        <span class="text-white me-2"> <img src="../img/usuario.png">${this.currentUser}</span>
         <button class="btn btn-outline-warning" id="btnLogout">Cerrar Sesión</button>
       `;
       document.getElementById("btnLogout").addEventListener("click", () => this.logout());
