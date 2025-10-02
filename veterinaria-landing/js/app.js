@@ -807,13 +807,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   await inicializar();
 
   // NAVEGACIÓN ENTRE SECCIONES
+
+  document.getElementById('btnShowInicio').addEventListener('click', () => {
+   document.getElementById('seccionInicio').style.display = '';   
+   document.getElementById('seccionCitas').style.display = 'none';
+   document.getElementById('seccionPacientes').style.display = 'none';
+   document.getElementById('seccionInventario').style.display = 'none';
+  });
   document.getElementById('btnShowCitas').addEventListener('click', () => {
+    document.getElementById('seccionInicio').style.display = 'none'; 
     document.getElementById('seccionCitas').style.display = '';
     document.getElementById('seccionPacientes').style.display = 'none';
     document.getElementById('seccionInventario').style.display = 'none';
   });
   
   document.getElementById('btnShowPacientes').addEventListener('click', () => {
+    document.getElementById('seccionInicio').style.display = 'none';
     document.getElementById('seccionCitas').style.display = 'none';
     document.getElementById('seccionPacientes').style.display = '';
     document.getElementById('seccionInventario').style.display = 'none';
@@ -824,6 +833,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       forceLoginModal(); 
       return; 
     }
+    document.getElementById('seccionInicio').style.display = 'none';
     document.getElementById('seccionCitas').style.display = 'none';
     document.getElementById('seccionPacientes').style.display = 'none';
     document.getElementById('seccionInventario').style.display = '';
