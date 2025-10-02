@@ -569,16 +569,16 @@
     </div>
   </div>
 
-  <!-- Modal Carrito -->
-<div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
+<!-- Modal Carrito -->
+<div class="modal fade" id="modalCarrito" tabindex="-1" aria-labelledby="modalCarritoLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="cartModalLabel">Carrito de Compras</h5>
+        <h5 class="modal-title" id="modalCarritoLabel">Carrito de Compras</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
       </div>
       <div class="modal-body">
-        <table class="table table-sm" id="cartTable">
+        <table class="table table-sm" id="tablaCarrito">
           <thead>
             <tr>
               <th>Producto</th>
@@ -591,16 +591,49 @@
           <tbody></tbody>
         </table>
         <div class="d-flex justify-content-end fw-bold">
-          Total: $<span id="cartTotal">0.00</span>
+          Total: $<span id="totalCarrito">0.00</span>
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Seguir comprando</button>
-        <button type="button" class="btn btn-success" id="checkoutBtn">Comprar</button>
+        <button type="button" class="btn btn-success" id="btnFinalizarCompra">Finalizar Compra</button>
       </div>
     </div>
   </div>
 </div>
+
+<!-- Modal Pago -->
+<div class="modal fade" id="modalPago" tabindex="-1" aria-labelledby="modalPagoLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalPagoLabel">Selecciona método de pago</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <form id="formPago">
+          <div class="mb-3">
+            <label for="numeroTarjeta" class="form-label">Número de tarjeta</label>
+            <input type="text" class="form-control" id="numeroTarjeta" required>
+          </div>
+          <div class="mb-3">
+            <label for="fechaExpiracion" class="form-label">Fecha de expiración</label>
+            <input type="text" class="form-control" id="fechaExpiracion" placeholder="MM/AA" required>
+          </div>
+          <div class="mb-3">
+            <label for="cvcTarjeta" class="form-label">CVC</label>
+            <input type="text" class="form-control" id="cvcTarjeta" required>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-success" id="btnPagar">Pagar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 
   <!-- Bootstrap + Script app -->

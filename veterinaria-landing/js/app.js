@@ -396,7 +396,8 @@ function renderInventarioTable(){
       <td>
         <button class="btn btn-sm btn-warning" onclick="editarProducto('${p.id}')">Editar</button>
         <button class="btn btn-sm btn-danger" onclick="confirmEliminarProducto('${p.id}')">Eliminar</button>
-        <button class="btn btn-sm btn-success" onclick="addToCart('${p.id}')">🛒</button>
+        <button class="btn btn-sm btn-success" onclick="agregarCarrito('${p.id}')">🛒</button>
+
       </td>
     `;
     tbody.appendChild(tr);
@@ -1138,63 +1139,70 @@ document.addEventListener('DOMContentLoaded', async () => {
 /* ======================
    CARRITO DE COMPRAS
    ====================== */
-let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+let carrito = JSON.parse(localStorage.getItem('carrito') || '[]');
 
-function saveCart() {
-  localStorage.setItem('cart', JSON.stringify(cart));
-  renderCart();
+// Guardar carrito en localStorage y actualizar render
+function guardarCarrito() {
+  localStorage.setItem('carrito', JSON.stringify(carrito));
+  cargarCarrito();
 }
 
-function addToCart(productId, cantidad = 1) {
-  const producto = findProductoById(productId);
+// Agregar producto al carrito
+function agregarCarrito(idProducto, cantidad = 1) {
+  const producto = findProductoById(idProducto);
   if(!producto) return alert('Producto no encontrado');
   if(producto.cantidad < cantidad) return alert('No hay suficiente stock');
 
-  const idx = cart.findIndex(p => p.idProducto === productId);
+  const idx = carrito.findIndex(p => p.idProducto === idProducto);
   if(idx >= 0){
-    if(producto.cantidad < cart[idx].cantidad + cantidad) 
+    if(producto.cantidad < carrito[idx].cantidad + cantidad) 
       return alert('No hay suficiente stock');
-    cart[idx].cantidad += cantidad;
+    carrito[idx].cantidad += cantidad;
   } else {
-    cart.push({
-      idProducto: productId,
+    carrito.push({
+      idProducto: idProducto,
       nombre: producto.nombre,
       precio: producto.precio,
       cantidad
     });
   }
 
-  saveCart();
+  cargarCarrito();
   alert(`Se agregó ${cantidad} x ${producto.nombre} al carrito`);
 }
 
-function removeFromCart(productId){
-  cart = cart.filter(p => p.idProducto !== productId);
-  saveCart();
+// Eliminar producto del carrito
+function removerCarrito(idProducto){
+  carrito = carrito.filter(p => p.idProducto !== idProducto);
+  guardarCarrito();
 }
 
-function updateCartQuantity(productId, cantidad){
-  const idx = cart.findIndex(p => p.idProducto === productId);
+// Actualizar cantidad de producto en carrito
+function actualizarCantidadCarrito(idProducto, cantidad){
+  const idx = carrito.findIndex(p => p.idProducto === idProducto);
   if(idx >= 0){
     if(cantidad <= 0){
-      removeFromCart(productId);
+      removerCarrito(idProducto);
     } else {
-      const producto = findProductoById(productId);
+      const producto = findProductoById(idProducto);
       if(producto.cantidad < cantidad) return alert('No hay suficiente stock');
-      cart[idx].cantidad = cantidad;
+      carrito[idx].cantidad = cantidad;
     }
-    saveCart();
+    guardarCarrito();
   }
 }
 
-function getCartTotal(){
-  return cart.reduce((sum, p) => sum + p.precio * p.cantidad, 0).toFixed(2);
+// Calcular total del carrito
+function totalCarrito(){
+  return carrito.reduce((sum, p) => sum + p.precio * p.cantidad, 0).toFixed(2);
 }
 
-function renderCart(){
-  const tbody = document.querySelector('#cartTable tbody');
+// Renderizar carrito en el modal
+function cargarCarrito(){
+  const tbody = document.querySelector('#tablaCarrito tbody');
   tbody.innerHTML = '';
-  cart.forEach(p => {
+
+  carrito.forEach(p => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${p.nombre}</td>
@@ -1208,63 +1216,82 @@ function renderCart(){
     tbody.appendChild(tr);
   });
 
-  document.getElementById('cartTotal').textContent = getCartTotal();
+  document.getElementById('totalCarrito').textContent = totalCarrito();
 
-  // eventos input cantidad
+  // Eventos input cantidad
   tbody.querySelectorAll('input[type="number"]').forEach(input => {
     input.addEventListener('change', (ev)=>{
       const id = ev.target.getAttribute('data-id');
       let cant = parseInt(ev.target.value);
       if(isNaN(cant) || cant < 1) cant = 1;
-      updateCartQuantity(id, cant);
+      actualizarCantidadCarrito(id, cant);
     });
   });
 
-  // eventos eliminar
+  // Eventos eliminar producto
   tbody.querySelectorAll('button').forEach(btn => {
     btn.addEventListener('click', ()=>{
       const id = btn.getAttribute('data-id');
-      removeFromCart(id);
+      removerCarrito(id);
     });
   });
 }
 
-// botón para abrir carrito
-const cartBtn = document.createElement('button');
-cartBtn.className = 'btn btn-primary position-fixed';
-cartBtn.style.bottom = '20px';
-cartBtn.style.right = '20px';
-cartBtn.style.zIndex = '1055';
-cartBtn.textContent = '🛒 Carrito';
-cartBtn.setAttribute('data-bs-toggle','modal');
-cartBtn.setAttribute('data-bs-target','#cartModal');
-document.body.appendChild(cartBtn);
+// Botón flotante para abrir carrito
+const btnCarrito = document.createElement('button');
+btnCarrito.className = 'btn btn-primary position-fixed';
+btnCarrito.style.bottom = '20px';
+btnCarrito.style.right = '20px';
+btnCarrito.style.zIndex = '1055';
+btnCarrito.textContent = '🛒 Carrito';
+btnCarrito.setAttribute('data-bs-toggle','modal');
+btnCarrito.setAttribute('data-bs-target','#modalCarrito');
+document.body.appendChild(btnCarrito);
 
-// checkout
-document.getElementById('checkoutBtn').addEventListener('click', async ()=>{
-  if(cart.length === 0) return alert('Carrito vacío');
-  
-  for(const item of cart){
+// Abrir modal de pago al terminar la compra
+document.getElementById('btnFinalizarCompra').addEventListener('click', ()=>{
+  if(carrito.length === 0) return alert('Carrito vacío');
+
+  // Validar stock
+  for(const item of carrito){
     const producto = findProductoById(item.idProducto);
     if(!producto || producto.cantidad < item.cantidad){
       return alert(`Stock insuficiente de ${item.nombre}`);
     }
   }
 
-  // restar del inventario
-  cart.forEach(item=>{
+  // Abrir modal de pago
+  const modalPago = new bootstrap.Modal(document.getElementById('modalPago'));
+  modalPago.show();
+});
+
+// Procesar pago
+document.getElementById('btnPagar').addEventListener('click', async ()=>{
+  const numeroTarjeta = document.getElementById('numeroTarjeta').value;
+  const fechaExpiracion = document.getElementById('fechaExpiracion').value;
+  const cvcTarjeta = document.getElementById('cvcTarjeta').value;
+
+  if(!numeroTarjeta || !fechaExpiracion || !cvcTarjeta){
+    return alert('Completa todos los campos de la tarjeta');
+  }
+
+  carrito.forEach(item=>{
     const producto = findProductoById(item.idProducto);
     producto.cantidad -= item.cantidad;
   });
 
   await saveJSONFile(FILE_INVENTARIO, inventario);
-  cart = [];
-  saveCart();
+  carrito = [];
+  guardarCarrito();
   renderInventarioTable();
   alert('Compra realizada correctamente');
-  const cartModal = bootstrap.Modal.getInstance(document.getElementById('cartModal'));
-  if(cartModal) cartModal.hide();
+
+  //Cerrar ambos modales
+  const modalPagoInstancia = bootstrap.Modal.getInstance(document.getElementById('modalPago'));
+  if(modalPagoInstancia) modalPagoInstancia.hide();
+  const modalCarritoInstancia = bootstrap.Modal.getInstance(document.getElementById('modalCarrito'));
+  if(modalCarritoInstancia) modalCarritoInstancia.hide();
 });
 
-// inicializar render del carrito
-renderCart();
+// Cargar
+cargarCarrito();
